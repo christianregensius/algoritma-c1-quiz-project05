@@ -26,3 +26,130 @@ turnover <- read.csv("turnover_balance.csv")
 head(turnover,2)
 ```
 
+
+```{r}
+agg_turnover <- turnover %>%  
+  group_by(division, left) %>% 
+  summarise(average_monthly_hours =mean(average_montly_hours)) %>% 
+  filter(left==1) %>% 
+  arrange(desc(average_monthly_hours))
+
+#prop.table(table(agg_turnover$left, agg_turnover$division))
+```
+
+```{r}
+set.seed(100)
+idx <- sample(nrow(turnover), nrow(turnover)*0.8)
+train <- turnover[idx,] # data train yang akan dipake dalam proses modeling
+test <- turnover[-idx,] # data test yang akan dipakai untuk menguji model
+```
+
+```{r}
+table(train$left) %>% 
+  prop.table() %>% 
+  round(2)
+
+
+table(test$left) %>% 
+  prop.table() %>% 
+  round(2)
+```
+
+Yes, it is balance, need to be balance
+
+
+```{r}
+model_logistic <- glm(formula = left~.,data = train, family = "binomial")
+```
+
+```{r}
+summary(model_logistic)
+```
+```{r}
+exp(-1.4437353)
+```
+Employee that had a work accident is about 0.23 more likely to resign than the employee that has not.
+
+
+```{r}
+str(train)
+```
+
+
+```{r}
+
+train_knn <- train %>%
+  select_if(is.numeric) %>%
+  scale()
+head(train_knn)
+
+test_knn <- test %>%
+  select_if(is.numeric) %>%
+  scale()
+head(test_knn)
+```
+
+```{r}
+glimpse(train_knn)
+```
+```{r}
+sqrt(nrow(train_knn)) %>% round(0)
+```
+
+
+```{r}
+glimpse(test_knn)
+```
+
+
+```{r}
+
+model_knn <- knn(train = train_knn, test = test_knn, cl = train$test, k = 75)
+```
+
+```{r}
+pred_value <- predict(model_logistic, test, type = "response")
+pred_label <- ifelse(pred_value<=0.45, "0", "1")
+```
+
+
+```{r}
+prop.table(table(pred_label)) %>% round(2)
+```
+
+
+```{r}
+confusionMatrix(as.factor(pred_label), as.factor(test$left), positive = "1")
+```
+
+```{r}
+
+train_knn <- train %>%
+  mutate(left = as.factor(left), 
+         division = as.factor(division), 
+         promotion_last_5years = as.factor(promotion_last_5years),
+         Work_accident = as.factor(Work_accident)) %>%
+  select_if(is.numeric) %>%
+  scale()
+
+test_knn <- test %>%
+  mutate(left = as.factor(left), 
+         division = as.factor(division), 
+         promotion_last_5years = as.factor(promotion_last_5years),
+         Work_accident = as.factor(Work_accident)) %>%
+  select_if(is.numeric) %>%
+  scale()
+
+```
+
+
+```{r}
+pred_label <- knn(train = train_knn, test = test_knn , cl =train$left, k = 75)
+
+confusionMatrix(as.factor(pred_label), as.factor(test$left), positive = "1")
+
+
+prop.table(table(pred_label)) %>% round(2)
+```
+
+

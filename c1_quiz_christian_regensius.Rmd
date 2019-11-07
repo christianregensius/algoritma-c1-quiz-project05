@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+author: "Christian Regensius"
+date: "7/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 123)
+```
+
+## R Markdown
+
+```{r}
+library(dplyr)
+library(class)
+library(gtools)
+library(caret)
+library(lattice)
+library(ggplot2)
+```
+
+```{r}
+turnover <- read.csv("turnover_balance.csv")
+head(turnover,2)
+```
+
